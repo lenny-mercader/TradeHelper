@@ -11,6 +11,7 @@ dist/
 # Env / IDE / OS
 .env
 .env.*
+!.env.example
 .vscode/
 .idea/
 .DS_Store

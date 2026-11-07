@@ -1,12 +1,36 @@
 services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: tradehelper
+      POSTGRES_PASSWORD: tradehelper
+      POSTGRES_DB: tradehelper
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tradehelper -d tradehelper"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
   back:
     build: ./back
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     ports:
       - "8000:8000"
+    # ALPHA_VANTAGE_API_KEY and REFRESH_TOKEN (see back/.env.example)
+    env_file: ./back/.env
     environment:
+      DATABASE_URL: postgresql://tradehelper:tradehelper@db:5432/tradehelper
       WATCHFILES_FORCE_POLLING: "true"
     volumes:
       - ./back/app:/app/app
+      - ./back/migrations:/app/migrations
+    depends_on:
+      db:
+        condition: service_healthy
 
   front:
     build: ./front
@@ -20,3 +44,6 @@ services:
       - /app/node_modules
     depends_on:
       - back
+
+volumes:
+  pgdata:

@@ -1,0 +1,25 @@
+name: Daily market data refresh
+
+on:
+  schedule:
+    # 22:30 UTC, Monday to Friday: after the US close (16:00 ET) in both summer and winter time.
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      BACKEND_URL: https://tradehelper-vf65.onrender.com
+    steps:
+      - name: Wake up the backend (Render free tier sleeps)
+        run: |
+          curl --silent --show-error --fail --retry 6 --retry-delay 20 --retry-all-errors \
+            --max-time 90 "$BACKEND_URL/api/quotes" > /dev/null
+
+      - name: Refresh end-of-day data
+        env:
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+        run: |
+          curl --silent --show-error --fail-with-body --max-time 120 -X POST \
+            -H "Authorization: Bearer $REFRESH_TOKEN" "$BACKEND_URL/api/refresh"

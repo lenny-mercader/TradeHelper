@@ -12,8 +12,11 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock* ./
 RUN poetry install --no-root
 
+COPY alembic.ini ./
+COPY migrations ./migrations
 COPY app ./app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Production command; docker-compose overrides it with --reload for development.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
