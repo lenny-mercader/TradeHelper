@@ -33,7 +33,7 @@ def refresh(
     session: Annotated[Session, Depends(get_session)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> RefreshResult:
-    """Pull end-of-day data from Alpha Vantage. Called daily by GitHub Actions."""
+    """Pull end-of-day data from Tiingo. Called daily by GitHub Actions."""
     result = RefreshResult(results=refresh_all(session, settings))
     if any(r.startswith("error") for r in result.results.values()):
         # Non-2xx so the scheduled workflow shows up as failed.

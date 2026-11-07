@@ -20,7 +20,7 @@ services:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     ports:
       - "8000:8000"
-    # ALPHA_VANTAGE_API_KEY and REFRESH_TOKEN (see back/.env.example)
+    # TIINGO_API_KEY and REFRESH_TOKEN (see back/.env.example)
     env_file: ./back/.env
     environment:
       DATABASE_URL: postgresql://tradehelper:tradehelper@db:5432/tradehelper
