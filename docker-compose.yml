@@ -1,0 +1,22 @@
+services:
+  back:
+    build: ./back
+    ports:
+      - "8000:8000"
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./back/app:/app/app
+
+  front:
+    build: ./front
+    ports:
+      - "5173:5173"
+    environment:
+      BACKEND_URL: http://back:8000
+      VITE_USE_POLLING: "true"
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+    depends_on:
+      - back

@@ -1,0 +1,16 @@
+[project]
+name = "tradehelper-back"
+version = "0.1.0"
+description = "TradeHelper API (FastAPI)"
+requires-python = ">=3.15,<3.16"
+dependencies = [
+    "fastapi (>=0.115)",
+    "uvicorn[standard] (>=0.32)",
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
