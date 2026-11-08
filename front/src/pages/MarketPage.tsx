@@ -1,6 +1,8 @@
+import { useAuth } from '@clerk/react'
 import { Link } from 'react-router'
 import { api, type Mover } from '../api'
 import { QuoteTable } from '../components/QuoteTable'
+import { SignInPrompt } from '../components/SignInPrompt'
 import { Status } from '../components/Status'
 import { formatDate, formatEur, formatPercent, formatVolume, trendClass } from '../format'
 import { useApi } from '../hooks/useApi'
@@ -33,8 +35,10 @@ function MoversTable({ title, movers }: { title: string; movers: Mover[] }) {
 }
 
 export function MarketPage() {
+  const { isLoaded, isSignedIn, userId } = useAuth()
   const movers = useApi('movers', api.movers)
-  const watchlist = useApi('watchlist', api.watchlist)
+  // Keyed by user: signing in/out reloads the right list.
+  const watchlist = useApi(isSignedIn ? `watchlist:${userId}` : null, api.watchlist)
 
   return (
     <>
@@ -52,8 +56,9 @@ export function MarketPage() {
       )}
 
       <h2 className="section-title">
-        Mes actions suivies <Link to="/watchlist">gérer</Link>
+        Mes actions suivies {isSignedIn && <Link to="/watchlist">gérer</Link>}
       </h2>
+      {isLoaded && !isSignedIn && <SignInPrompt />}
       <Status loading={watchlist.loading} error={watchlist.error} />
       {watchlist.data?.length === 0 && (
         <p className="muted">Aucune action suivie. Cherche une action et clique sur « Suivre ».</p>

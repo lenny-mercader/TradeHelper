@@ -1,3 +1,4 @@
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
 import { Link, NavLink, Route, Routes, useNavigate } from 'react-router'
 import { SearchBox } from './components/SearchBox'
 import { ComparePage } from './pages/ComparePage'
@@ -22,6 +23,21 @@ function App() {
           <NavLink to="/compare">Comparer</NavLink>
         </nav>
         <SearchBox onSelect={(r) => navigate(`/stock/${encodeURIComponent(r.symbol)}`)} />
+        <div className="account">
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button type="button" className="secondary">
+                Se connecter
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button type="button">S'inscrire</button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
+        </div>
       </header>
 
       <main>

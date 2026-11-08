@@ -1,4 +1,7 @@
-"""Nightly job: US snapshot, followed instruments the snapshot doesn't cover, then FX rates."""
+"""Scheduled jobs (run by GitHub Actions through `python -m app.jobs`).
+
+Nightly: US snapshot, every already-opened instrument the snapshot doesn't cover, then FX rates.
+"""
 
 import datetime as dt
 from collections.abc import Callable
@@ -43,8 +46,11 @@ def daily_refresh(session: Session, settings: Settings) -> dict[str, str]:
     guard("us_snapshot", snapshot)
 
     today = dt.date.today()
-    followed = session.scalars(select(Instrument).where(Instrument.followed)).all()
-    for instrument in followed:
+    # Every instrument opened at least once, whether or not someone has it in a watchlist.
+    opened = session.scalars(
+        select(Instrument).where(Instrument.history_checked_on.is_not(None))
+    ).all()
+    for instrument in opened:
         symbol = instrument.symbol
         if symbol in covered:
             instrument.history_checked_on = today

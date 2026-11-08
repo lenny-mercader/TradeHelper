@@ -1,13 +1,30 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Instrument
+from app.models import Instrument, WatchlistItem
 from app.schemas import Quote
 from app.services import fx
 from app.services.instruments import last_two
 
 
-def build_quote(session: Session, instrument: Instrument) -> Quote:
-    """Latest close in EUR and its change vs the previous session (also in EUR)."""
+def in_watchlist(session: Session, user_id: str | None, symbol: str) -> bool:
+    if user_id is None:
+        return False
+    return (
+        session.scalar(
+            select(WatchlistItem.symbol).where(
+                WatchlistItem.user_id == user_id, WatchlistItem.symbol == symbol
+            )
+        )
+        is not None
+    )
+
+
+def build_quote(session: Session, instrument: Instrument, followed: bool) -> Quote:
+    """Latest close in EUR and its change vs the previous session (also in EUR).
+
+    `followed`: whether the instrument is in the current user's watchlist (False when anonymous).
+    """
     rows = last_two(session, instrument.symbol)
     quote = Quote(
         symbol=instrument.symbol,
@@ -19,7 +36,7 @@ def build_quote(session: Session, instrument: Instrument) -> Quote:
         close_local=None,
         change_percent=None,
         volume=None,
-        followed=instrument.followed,
+        followed=followed,
     )
     if not rows:
         return quote

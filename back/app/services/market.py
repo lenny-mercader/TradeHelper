@@ -15,7 +15,7 @@ from app.services.instruments import save_bars
 # How far back to look for the last trading day (weekends, holidays, data not published yet).
 LOOKBACK_DAYS = 6
 
-# Longest acceptable hole between a followed instrument's last bar and the new session
+# Longest acceptable hole between an opened instrument's last bar and the new session
 # (a long weekend); beyond that, nights were missed and the history must be reloaded.
 MAX_GAP = dt.timedelta(days=5)
 
@@ -53,7 +53,7 @@ def _store_snapshot(session: Session, bars: list[Bar]) -> None:
 def refresh_snapshot(
     session: Session, massive: MassiveClient
 ) -> tuple[str, dt.date | None, set[str]]:
-    """Store the latest US session. Returns (status, day, followed symbols updated from it)."""
+    """Store the latest US session. Returns (status, day, opened symbols updated from it)."""
     found = _last_trading_day(massive, dt.date.today())
     if not found:
         return "error: no US trading day found in the last days", None, set()
@@ -75,12 +75,12 @@ def refresh_snapshot(
     split_symbols = massive.splits(split_start, day)
     session.execute(update(UsSnapshot).values(split=UsSnapshot.symbol.in_(split_symbols)))
 
-    # Append the day to followed US instruments whose history is complete and continuous.
+    # Append the day to opened US instruments whose history is complete and continuous.
     # The others (gap, split, never fully loaded) are reloaded from Yahoo/Massive by the caller.
     last_dates = session.execute(
         select(Instrument.symbol, Instrument.history_loaded_at, func.max(DailyPrice.date))
         .outerjoin(DailyPrice, DailyPrice.symbol == Instrument.symbol)
-        .where(Instrument.followed, Instrument.is_us)
+        .where(Instrument.history_checked_on.is_not(None), Instrument.is_us)
         .group_by(Instrument.symbol, Instrument.history_loaded_at)
     ).all()
     covered = {

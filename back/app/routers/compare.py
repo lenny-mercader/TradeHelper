@@ -50,7 +50,7 @@ def compare(
                 symbol=instrument.symbol,
                 name=instrument.name,
                 currency=instrument.currency,
-                close=build_quote(session, instrument).close,
+                close=build_quote(session, instrument, followed=False).close,
                 **metrics.compute(points),
             )
         )

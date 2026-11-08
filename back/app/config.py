@@ -8,7 +8,17 @@ class Settings(BaseSettings):
 
     database_url: str
     massive_api_key: str
-    refresh_token: str
+
+    # Clerk. Optional so the scheduled jobs (which don't authenticate anyone) can run without them;
+    # the API refuses authenticated routes / webhooks while they are missing.
+    clerk_secret_key: str | None = None
+    clerk_webhook_signing_secret: str | None = None
+    # Origins allowed to use a Clerk session token (Clerk's CSRF recommendation).
+    # Override with a JSON list, e.g. AUTHORIZED_PARTIES='["https://example.com"]'.
+    authorized_parties: list[str] = [
+        "http://localhost:5173",
+        "https://trade-helper-rho.vercel.app",
+    ]
 
     # Depth of the history loaded the first time an instrument is opened.
     history_years: int = 5

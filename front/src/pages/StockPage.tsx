@@ -1,3 +1,4 @@
+import { useAuth, useClerk } from '@clerk/react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api } from '../api'
@@ -8,7 +9,12 @@ import { useApi } from '../hooks/useApi'
 
 export function StockPage() {
   const symbol = (useParams().symbol ?? '').toUpperCase()
-  const quote = useApi(symbol, () => api.instrument(symbol))
+  const { isLoaded, isSignedIn, userId } = useAuth()
+  const clerk = useClerk()
+  // Keyed by user too: `followed` depends on who is signed in. Wait for Clerk to avoid a double load.
+  const quote = useApi(isLoaded ? `${symbol}:${userId ?? 'anonymous'}` : null, () =>
+    api.instrument(symbol),
+  )
   // Wait for the quote: it triggers the first load of the history on the server.
   const history = useApi(quote.data ? symbol : null, () => api.history(symbol))
   const [busy, setBusy] = useState(false)
@@ -16,6 +22,10 @@ export function StockPage() {
 
   async function toggleFollow() {
     if (!quote.data) return
+    if (!isSignedIn) {
+      clerk.openSignIn()
+      return
+    }
     setBusy(true)
     setActionError(null)
     try {

@@ -4,7 +4,7 @@ import bisect
 import datetime as dt
 from functools import lru_cache
 
-from sqlalchemy import distinct, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import FxRate
@@ -49,7 +49,7 @@ def ensure_currency(session: Session, currency: str | None) -> None:
 
 def refresh_all(session: Session) -> str:
     """Append the latest rates of every currency already in use."""
-    currencies = set(session.scalars(select(distinct(FxRate.currency))).all())
+    currencies = set(session.scalars(select(FxRate.currency).distinct()).all())
     if not currencies:
         return "ok: no currency in use yet"
     last = dict(

@@ -1,7 +1,7 @@
 import datetime as dt
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Numeric, String
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, ForeignKey, Numeric, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 PRICE = Numeric(18, 6)
@@ -27,10 +27,24 @@ class Instrument(Base):
     type: Mapped[str | None] = mapped_column(String(16))
     # Listed in the Massive US catalog (covered by the daily grouped snapshot).
     is_us: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
-    followed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", index=True)
     history_loaded_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
-    # Last day an incremental update was attempted (at most one provider call per day per symbol).
+    # Last day an update was attempted (at most one provider call per day per symbol).
+    # Non-null means the instrument has been opened at least once: the nightly job keeps it fresh.
     history_checked_on: Mapped[dt.date | None] = mapped_column(Date)
+
+
+class WatchlistItem(Base):
+    """One symbol in one user's watchlist. `user_id` is the Clerk user id (no local user table)."""
+
+    __tablename__ = "watchlist_items"
+
+    user_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    symbol: Mapped[str] = mapped_column(
+        String(32), ForeignKey("instruments.symbol", ondelete="CASCADE"), primary_key=True
+    )
+    added_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class DailyPrice(Base):

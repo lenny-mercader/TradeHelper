@@ -119,6 +119,24 @@ main {
   margin-left: auto;
 }
 
+.topbar .account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.signin-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.signin-prompt p {
+  margin: 0;
+}
+
 /* Search */
 .search {
   position: relative;
@@ -197,7 +215,8 @@ button,
   text-decoration: none;
 }
 
-.button.secondary {
+.button.secondary,
+button.secondary {
   color: var(--accent);
   background: transparent;
   border: 1px solid var(--accent);

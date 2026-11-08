@@ -1,13 +1,16 @@
+import { useAuth } from '@clerk/react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../api'
 import { QuoteTable } from '../components/QuoteTable'
 import { SearchBox } from '../components/SearchBox'
+import { SignInPrompt } from '../components/SignInPrompt'
 import { Status } from '../components/Status'
 import { useApi } from '../hooks/useApi'
 
 export function WatchlistPage() {
-  const watchlist = useApi('watchlist', api.watchlist)
+  const { isLoaded, isSignedIn, userId } = useAuth()
+  const watchlist = useApi(isSignedIn ? `watchlist:${userId}` : null, api.watchlist)
   const [pending, setPending] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -22,6 +25,16 @@ export function WatchlistPage() {
     } finally {
       setPending(null)
     }
+  }
+
+  if (!isLoaded) return <p className="muted">Chargement…</p>
+  if (!isSignedIn) {
+    return (
+      <>
+        <h1>Actions suivies</h1>
+        <SignInPrompt />
+      </>
+    )
   }
 
   const symbols = watchlist.data?.map((q) => q.symbol) ?? []

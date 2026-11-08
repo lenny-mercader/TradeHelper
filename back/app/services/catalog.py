@@ -21,7 +21,7 @@ def refresh_catalog(session: Session, massive: MassiveClient) -> str:
             }
             for t in page
         ]
-        # Never touch followed/history columns: only descriptive fields are refreshed.
+        # Never touch history columns: only descriptive fields are refreshed.
         upsert(session, Instrument, rows, ("symbol",), ("name", "exchange", "currency", "type", "is_us"))
         session.commit()
         total += len(rows)
