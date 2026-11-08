@@ -11,6 +11,7 @@ dependencies = [
     "alembic (>=1.14)",
     "psycopg[binary] (>=3.2)",
     "httpx (>=0.28)",
+    "yfinance (>=1.8)",
 ]
 
 [tool.poetry]

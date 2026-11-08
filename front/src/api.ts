@@ -1,31 +1,90 @@
+// Every `close` / `high_52w` / ... is in EUR; `close_local` is in the instrument's `currency`.
+
 export type Quote = {
   symbol: string
-  date: string
-  open: number
-  high: number
-  low: number
-  close: number
-  volume: number
-  change: number | null
+  name: string | null
+  exchange: string | null
+  currency: string | null
+  date: string | null
+  close: number | null
+  close_local: number | null
   change_percent: number | null
+  volume: number | null
+  followed: boolean
 }
 
 export type HistoryPoint = {
   date: string
-  open: number
-  high: number
-  low: number
-  close: number
+  close: number | null
+  close_local: number
   volume: number
 }
 
-async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(path)
-  if (!res.ok) throw new Error(`HTTP ${res.status} sur ${path}`)
-  return res.json() as Promise<T>
+export type SearchResult = {
+  symbol: string
+  name: string | null
+  exchange: string | null
+  type: string | null
 }
 
-export const fetchQuotes = () => getJson<Quote[]>('/api/quotes')
+export type Mover = {
+  symbol: string
+  name: string | null
+  date: string
+  close: number | null
+  close_local: number
+  currency: string
+  change_percent: number
+  volume: number
+}
 
-export const fetchHistory = (symbol: string) =>
-  getJson<HistoryPoint[]>(`/api/quotes/${encodeURIComponent(symbol)}/history`)
+export type Movers = {
+  date: string | null
+  gainers: Mover[]
+  losers: Mover[]
+}
+
+export type CompareRow = {
+  symbol: string
+  name: string | null
+  currency: string | null
+  close: number | null
+  perf_1m: number | null
+  perf_1y: number | null
+  perf_5y: number | null
+  volatility_1y: number | null
+  high_52w: number | null
+  low_52w: number | null
+  error: string | null
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, init)
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try {
+      const body = (await res.json()) as { detail?: unknown }
+      if (typeof body.detail === 'string') detail = body.detail
+    } catch {
+      // not JSON: keep the status
+    }
+    throw new Error(detail)
+  }
+  return (res.status === 204 ? undefined : res.json()) as Promise<T>
+}
+
+const enc = encodeURIComponent
+
+export const api = {
+  search: (q: string, signal?: AbortSignal) =>
+    request<SearchResult[]>(`/api/search?q=${enc(q)}`, { signal }),
+  instrument: (symbol: string) => request<Quote>(`/api/instruments/${enc(symbol)}`),
+  history: (symbol: string) => request<HistoryPoint[]>(`/api/instruments/${enc(symbol)}/history`),
+  watchlist: () => request<Quote[]>('/api/watchlist'),
+  follow: (symbol: string) => request<Quote>(`/api/watchlist/${enc(symbol)}`, { method: 'POST' }),
+  unfollow: (symbol: string) =>
+    request<void>(`/api/watchlist/${enc(symbol)}`, { method: 'DELETE' }),
+  movers: () => request<Movers>('/api/market/movers'),
+  compare: (symbols: string[]) =>
+    request<CompareRow[]>(`/api/compare?symbols=${enc(symbols.join(','))}`),
+}

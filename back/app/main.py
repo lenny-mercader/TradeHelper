@@ -5,7 +5,7 @@ from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
 
-from app.routers import quotes, refresh
+from app.routers import admin, compare, instruments, market, search, watchlist
 
 BACK_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,5 +25,5 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="TradeHelper API", lifespan=lifespan)
 
-app.include_router(quotes.router, prefix="/api")
-app.include_router(refresh.router, prefix="/api")
+for module in (search, instruments, watchlist, market, compare, admin):
+    app.include_router(module.router, prefix="/api")

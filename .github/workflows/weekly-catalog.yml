@@ -1,0 +1,25 @@
+name: Weekly US catalog refresh
+
+on:
+  schedule:
+    # Sunday 06:00 UTC: refreshes the ~11k US stocks/ETFs used by search and market movers.
+    - cron: "0 6 * * 0"
+  workflow_dispatch:
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    env:
+      BACKEND_URL: https://tradehelper-vf65.onrender.com
+    steps:
+      - name: Wake up the backend (Render free tier sleeps)
+        run: |
+          curl --silent --show-error --fail --retry 6 --retry-delay 20 --retry-all-errors \
+            --max-time 90 "$BACKEND_URL/api/market/movers" > /dev/null
+
+      - name: Refresh the catalog (about 13 Massive calls at 5/minute, ~3 minutes)
+        env:
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+        run: |
+          curl --silent --show-error --fail-with-body --max-time 600 -X POST \
+            -H "Authorization: Bearer $REFRESH_TOKEN" "$BACKEND_URL/api/catalog/refresh"
