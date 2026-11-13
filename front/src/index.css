@@ -80,7 +80,9 @@ h2 {
 }
 
 main {
-  max-width: 1280px;
+  /* Tracks the viewport (vw) between the two bounds, instead of a flat width that is only
+     ever right at one tested window size. */
+  max-width: clamp(320px, 92vw, 1280px);
   margin: 0 auto;
   padding: 24px 16px 48px;
 }
@@ -331,9 +333,27 @@ button.link:hover {
   padding: 6px 8px;
 }
 
-/* Market movers: a narrower name column leaves room for close/change/volume without scrolling. */
+/* Market movers: each column is a fixed share of the table's own (fluid) width, not a flat px
+   value, so close/change/volume stay visible whatever the panel ends up measuring. `max-width`
+   alone doesn't reliably cap a column under the default auto table layout (browsers size columns
+   off content first); `table-layout: fixed` makes the percentages below deterministic. */
+.data.compact {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.data.compact td.symbol {
+  width: 14%;
+}
+
+.data.compact td:nth-child(3),
+.data.compact td:nth-child(4),
+.data.compact td:nth-child(5) {
+  width: 17%;
+}
+
 .data.compact td.name {
-  max-width: 150px;
+  width: 35%;
 }
 
 .data th:first-child,
@@ -650,7 +670,9 @@ button.link:hover {
    down to grid-2 so the movers panels' bottom edge lines up with the panel's. */
 .home-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  /* The right column tracks the viewport (vw) within bounds, instead of a flat px width that
+     always claims the same space and starves the left columns as the window narrows. */
+  grid-template-columns: minmax(0, 1fr) clamp(240px, 22vw, 340px);
   gap: 16px;
 }
 
@@ -831,6 +853,15 @@ button.link:hover {
 
 .news-article-date {
   font-size: 0.75rem;
+}
+
+/* Below ~1100px there isn't room left for 3 fluid panels (2 movers + watchlist) side by side
+   without squeezing the movers tables back into horizontal scroll, whatever unit they use: this
+   is a content-density limit, not a sizing one. The movers stack instead of shrinking forever. */
+@media (max-width: 1100px) {
+  .grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 767px) {
