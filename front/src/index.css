@@ -80,11 +80,9 @@ h2 {
 }
 
 main {
-  /* Tracks the viewport (vw) between the two bounds, instead of a flat width that is only
-     ever right at one tested window size. */
-  max-width: clamp(320px, 92vw, 1280px);
-  margin: 0 auto;
-  padding: 24px 16px 48px;
+  /* Full viewport width on every page (no capped column leaving unused space on a wide
+     monitor); only the side padding scales with the viewport, via vw, not a flat px value. */
+  padding: 24px clamp(16px, 2.5vw, 56px) 48px;
 }
 
 .muted {
@@ -679,6 +677,13 @@ button.link:hover {
   gap: 16px;
 }
 
+/* Sits right above where the news sidebar itself would be (left edge of the layout below),
+   so reopening it is obviously tied to that spot — not a stray control near "Mes actions". */
+.news-reopen {
+  display: block;
+  margin-bottom: 12px;
+}
+
 .watchlist-panel {
   background: var(--surface);
   border: 1px solid var(--grid);
@@ -913,43 +918,44 @@ button.link:hover {
   border-top: 1px solid var(--grid);
 }
 
-.news-sidebar-list {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-}
-
-.news-sidebar-list li + li {
+/* One article at a time per feed, cycled with ‹ › (see NewsSidebar's FeedCarousel). */
+.news-carousel {
   margin-top: 8px;
 }
 
-.news-sidebar-list a {
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 8px;
+.news-carousel-article {
+  display: block;
   color: var(--text);
   border-radius: 6px;
   padding: 4px;
 }
 
-.news-sidebar-list a:hover {
+.news-carousel-article:hover {
   background: var(--hover);
   text-decoration: none;
 }
 
-.news-sidebar-list img {
-  width: 44px;
-  height: 44px;
+.news-carousel-article img {
+  display: block;
+  width: 100%;
+  height: 110px;
   object-fit: cover;
   border-radius: 6px;
   background: var(--bg);
+  margin-bottom: 6px;
 }
 
-.news-sidebar-text {
+.news-carousel-nav {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.news-carousel-nav button {
+  font-size: 1rem;
+  padding: 0 8px;
 }
 
 .news-sidebar-title {
@@ -974,7 +980,9 @@ button.link:hover {
 .heatmap-grid {
   position: relative;
   width: 100%;
-  aspect-ratio: 2.2 / 1;
+  /* Sized from the viewport height (vh), not tied to the container's own width: the heatmap
+     is meant to be the dominant block on the page, not just "wide but short". */
+  height: clamp(420px, 62vh, 820px);
   border-radius: 6px;
   overflow: hidden;
 }

@@ -64,20 +64,20 @@ export function MarketPage() {
 
   return (
     <>
-      <div className="page-head">
-        <h1>Marché US</h1>
-        {/* Hidden on mobile: the sidebar never shows there (see `newsOpen` below), so a toggle
-            for it would be misleading. The "Actualité" nav tab covers mobile instead. */}
-        {!isMobile && (
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => updateHome({ newsOpen: !homeState.newsOpen })}
-          >
-            {homeState.newsOpen ? 'Masquer l’actualité' : 'Afficher l’actualité'}
-          </button>
-        )}
-      </div>
+      <h1>Marché US</h1>
+
+      {/* Reopening lives right where the sidebar itself would be, not off in the page header:
+          hidden on mobile too, since the sidebar never shows there (see `newsOpen` below) —
+          the "Actualité" nav tab covers mobile instead. */}
+      {!isMobile && !newsOpen && (
+        <button
+          type="button"
+          className="secondary news-reopen"
+          onClick={() => updateHome({ newsOpen: true })}
+        >
+          › Afficher l’actualité
+        </button>
+      )}
 
       <div className={`home-layout-v2${newsOpen ? '' : ' news-collapsed'}`}>
         {newsOpen && <NewsSidebar onClose={() => updateHome({ newsOpen: false })} />}
