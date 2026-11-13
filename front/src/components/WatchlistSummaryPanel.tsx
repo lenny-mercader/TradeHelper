@@ -29,12 +29,9 @@ export function WatchlistSummaryPanel({ quotes }: Props) {
 
   return (
     <aside className="watchlist-panel">
-      <div className="watchlist-panel-head">
-        <h2>Mes actions suivies</h2>
-        <Link className="button secondary" to="/watchlist">
-          Voir la liste des valeurs suivies
-        </Link>
-      </div>
+      <h2 className="section-title">
+        Mes actions <Link to="/watchlist">voir la liste des valeurs suivies</Link>
+      </h2>
 
       {quotes.length === 0 ? (
         <p className="muted">
@@ -42,13 +39,13 @@ export function WatchlistSummaryPanel({ quotes }: Props) {
         </p>
       ) : (
         <>
-          <MiniQuoteList title="Top 5 gagnantes" quotes={gainers} emptyText="Pas encore de données." />
-          <MiniQuoteList title="Top 5 perdantes" quotes={losers} emptyText="Pas encore de données." />
           <MiniQuoteList
             title="Favoris"
             quotes={favorites}
             emptyText="Aucun favori. Marque des actions depuis la liste de suivi."
           />
+          <MiniQuoteList title="Top 5 gagnantes" quotes={gainers} emptyText="Pas encore de données." />
+          <MiniQuoteList title="Top 5 perdantes" quotes={losers} emptyText="Pas encore de données." />
         </>
       )}
     </aside>

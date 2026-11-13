@@ -275,7 +275,10 @@ button.link:hover {
 
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  /* Always exactly 2 columns (not auto-fit/minmax): the two always sit side by side, even in the
+     narrower left column next to the watchlist panel. Each side's own table-wrap scrolls
+     horizontally if it gets tight, instead of the columns wrapping to stack vertically. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -648,21 +651,6 @@ button.link:hover {
   padding: 16px;
 }
 
-.watchlist-panel-head {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.watchlist-panel-head h2 {
-  margin: 0;
-}
-
-.watchlist-panel-head .button {
-  text-align: center;
-  font-size: 0.85rem;
-}
 
 .mini-quote-list {
   margin-top: 16px;

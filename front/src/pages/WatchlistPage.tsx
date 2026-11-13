@@ -15,7 +15,6 @@ import { useStoredState } from '../hooks/useStoredState'
 const DEFAULT_CHECKED = 3
 
 type ViewState = {
-  view: 'list' | 'chart'
   /** null until the user changes the selection: the first DEFAULT_CHECKED stocks are used. */
   selected: string[] | null
   period: Period
@@ -23,7 +22,8 @@ type ViewState = {
   slots: Record<string, number>
 }
 
-const DEFAULT_VIEW: ViewState = { view: 'list', selected: null, period: '1Y', slots: {} }
+// Not persisted on purpose: the page always opens on the list, whatever was last chosen.
+const DEFAULT_VIEW: ViewState = { selected: null, period: '1Y', slots: {} }
 
 /** Slots for the current selection: stored ones when still free, otherwise the first free one. */
 function resolveSlots(selected: string[], stored: Record<string, number>) {
@@ -130,8 +130,19 @@ export function WatchlistPage() {
     `tradehelper:watchlist-view:${userId ?? 'anonymous'}`,
     DEFAULT_VIEW,
   )
+  // Always starts on "Liste" on every visit; not remembered across page loads.
+  const [view, setView] = useState<'list' | 'chart'>('list')
   const [pending, setPending] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  // Shows a toggled favorite instantly instead of waiting for the round trip + refetch.
+  const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({})
+  // Fresh data (after any reload) replaces the optimistic guess; adjusted during render
+  // (React's recommended pattern), not in an effect, so it lands before the browser paints.
+  const [lastWatchlistData, setLastWatchlistData] = useState(watchlist.data)
+  if (watchlist.data !== lastWatchlistData) {
+    setLastWatchlistData(watchlist.data)
+    setFavoriteOverrides({})
+  }
 
   async function run(label: string, action: () => Promise<unknown>) {
     setPending(label)
@@ -146,6 +157,22 @@ export function WatchlistPage() {
     }
   }
 
+  async function toggleFavorite(symbol: string, favorite: boolean) {
+    setFavoriteOverrides((o) => ({ ...o, [symbol]: favorite }))
+    setActionError(null)
+    try {
+      await (favorite ? api.favorite(symbol) : api.unfavorite(symbol))
+      watchlist.reload()
+    } catch (err) {
+      // Drop the optimistic guess for this symbol and report the real state.
+      setFavoriteOverrides((o) => {
+        const { [symbol]: _removed, ...rest } = o
+        return rest
+      })
+      setActionError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
   if (!isLoaded) return <p className="muted">Chargement…</p>
   if (!isSignedIn) {
     return (
@@ -156,7 +183,9 @@ export function WatchlistPage() {
     )
   }
 
-  const quotes = watchlist.data ?? []
+  const quotes = (watchlist.data ?? []).map((q) =>
+    q.symbol in favoriteOverrides ? { ...q, favorite: favoriteOverrides[q.symbol] } : q,
+  )
   const symbols = quotes.map((q) => q.symbol)
 
   return (
@@ -164,18 +193,10 @@ export function WatchlistPage() {
       <div className="page-head">
         <h1>Actions suivies</h1>
         <div className="segmented" role="group" aria-label="Affichage">
-          <button
-            type="button"
-            aria-pressed={viewState.view === 'list'}
-            onClick={() => updateView({ view: 'list' })}
-          >
+          <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>
             Liste
           </button>
-          <button
-            type="button"
-            aria-pressed={viewState.view === 'chart'}
-            onClick={() => updateView({ view: 'chart' })}
-          >
+          <button type="button" aria-pressed={view === 'chart'} onClick={() => setView('chart')}>
             Graphique
           </button>
         </div>
@@ -199,16 +220,14 @@ export function WatchlistPage() {
       <Status loading={watchlist.loading} error={watchlist.error} />
       {watchlist.data?.length === 0 && <p className="muted">Aucune action suivie pour l'instant.</p>}
 
-      {quotes.length > 0 && viewState.view === 'list' && (
+      {quotes.length > 0 && view === 'list' && (
         <QuoteTable
           quotes={quotes}
           onRemove={(symbol) => run(`Retrait de ${symbol}…`, () => api.unfollow(symbol))}
-          onToggleFavorite={(symbol, favorite) =>
-            run('', () => (favorite ? api.favorite(symbol) : api.unfavorite(symbol)))
-          }
+          onToggleFavorite={toggleFavorite}
         />
       )}
-      {quotes.length > 0 && viewState.view === 'chart' && (
+      {quotes.length > 0 && view === 'chart' && (
         <ChartView quotes={quotes} state={viewState} update={updateView} />
       )}
     </>
