@@ -103,9 +103,10 @@ def refresh_snapshot(
     return f"ok: {len(bars)} tickers on {day.isoformat()}", day, covered
 
 
-def movers(session: Session, limit: int = 10) -> dict[str, list[dict]]:
+def _tradable_snapshot():
+    """Liquid, non-split US common stocks/ADRs with a known previous close."""
     change = (UsSnapshot.close - UsSnapshot.prev_close) / UsSnapshot.prev_close
-    base = (
+    return (
         select(UsSnapshot, Instrument.name, change.label("change"))
         .join(Instrument, Instrument.symbol == UsSnapshot.symbol)
         .where(
@@ -117,6 +118,10 @@ def movers(session: Session, limit: int = 10) -> dict[str, list[dict]]:
             Instrument.type.in_(("CS", "ADRC")),
         )
     )
+
+
+def movers(session: Session, limit: int = 10) -> dict[str, list[dict]]:
+    base = _tradable_snapshot()
     usd = fx.Converter(session, "USD")
 
     def rows(order) -> list[dict]:
@@ -136,7 +141,34 @@ def movers(session: Session, limit: int = 10) -> dict[str, list[dict]]:
             )
         return out
 
+    change = base.selected_columns.change
     return {"gainers": rows(change.desc()), "losers": rows(change.asc())}
+
+
+def heatmap(session: Session, limit: int = 100) -> list[dict]:
+    """Top `limit` US stocks by dollar volume (close * volume), a free proxy for company size
+    (no market cap in our data sources): each tile's area is meant to reflect that share.
+    """
+    base = _tradable_snapshot()
+    dollar_volume = (UsSnapshot.close * UsSnapshot.volume).label("dollar_volume")
+    usd = fx.Converter(session, "USD")
+
+    rows = session.execute(
+        base.add_columns(dollar_volume).order_by(dollar_volume.desc()).limit(limit)
+    ).all()
+    return [
+        {
+            "symbol": snap.symbol,
+            "name": name,
+            "close": usd.to_eur(float(snap.close), snap.date),
+            "close_local": float(snap.close),
+            "currency": "USD",
+            "change_percent": float(chg) * 100,
+            "volume": snap.volume,
+            "dollar_volume": float(dv),
+        }
+        for snap, name, chg, dv in rows
+    ]
 
 
 def snapshot_date(session: Session) -> dt.date | None:

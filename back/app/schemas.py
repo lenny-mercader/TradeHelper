@@ -51,6 +51,24 @@ class Movers(BaseModel):
     losers: list[Mover]
 
 
+class HeatmapTile(BaseModel):
+    symbol: str
+    name: str | None
+    close: float | None
+    close_local: float
+    currency: str
+    change_percent: float
+    volume: int
+    # Dollar volume (close * volume): a free proxy for company size, used to size each tile
+    # (we have no market cap data source). Not displayed as such in the UI.
+    dollar_volume: float
+
+
+class Heatmap(BaseModel):
+    date: dt.date | None
+    tiles: list[HeatmapTile]
+
+
 class CompareRow(BaseModel):
     symbol: str
     name: str | None = None

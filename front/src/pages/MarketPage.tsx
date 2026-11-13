@@ -1,12 +1,15 @@
 import { useAuth } from '@clerk/react'
 import { Link } from 'react-router'
 import { api, type Mover } from '../api'
-import { NewsSection } from '../components/NewsSection'
+import { HeatmapPanel } from '../components/HeatmapPanel'
+import { NewsSidebar } from '../components/NewsSidebar'
 import { SignInPrompt } from '../components/SignInPrompt'
 import { Status } from '../components/Status'
 import { WatchlistSummaryPanel } from '../components/WatchlistSummaryPanel'
 import { formatDate, formatEur, formatPercent, formatVolume, trendClass } from '../format'
 import { useApi } from '../hooks/useApi'
+import { useMediaQuery } from '../hooks/useMediaQuery'
+import { useStoredState } from '../hooks/useStoredState'
 
 function MoversTable({ title, movers }: { title: string; movers: Mover[] }) {
   return (
@@ -40,17 +43,48 @@ function MoversTable({ title, movers }: { title: string; movers: Mover[] }) {
   )
 }
 
+type HomeState = {
+  newsOpen: boolean
+}
+
+// News starts open on desktop; the mobile layout below the breakpoint always starts collapsed
+// regardless of this (see the check below), since it would otherwise push everything else down.
+const DEFAULT_HOME_STATE: HomeState = { newsOpen: true }
+
 export function MarketPage() {
   const { isLoaded, isSignedIn, userId } = useAuth()
   const movers = useApi('movers', api.movers)
   // Keyed by user: signing in/out reloads the right list.
   const watchlist = useApi(isSignedIn ? `watchlist:${userId}` : null, api.watchlist)
+  const [homeState, updateHome] = useStoredState('tradehelper:home', DEFAULT_HOME_STATE)
+  // Starts collapsed on mobile regardless of the stored preference: it would otherwise push
+  // everything else down a phone screen. Reacts live to resizing, not just the page load width.
+  const isMobile = useMediaQuery('(max-width: 767px)')
+  const newsOpen = homeState.newsOpen && !isMobile
 
   return (
     <>
-      <div className="home-layout">
-        <div className="home-main">
-          <h1>Marché US</h1>
+      <div className="page-head">
+        <h1>Marché US</h1>
+        {/* Hidden on mobile: the sidebar never shows there (see `newsOpen` below), so a toggle
+            for it would be misleading. The "Actualité" nav tab covers mobile instead. */}
+        {!isMobile && (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => updateHome({ newsOpen: !homeState.newsOpen })}
+          >
+            {homeState.newsOpen ? 'Masquer l’actualité' : 'Afficher l’actualité'}
+          </button>
+        )}
+      </div>
+
+      <div className={`home-layout-v2${newsOpen ? '' : ' news-collapsed'}`}>
+        {newsOpen && <NewsSidebar onClose={() => updateHome({ newsOpen: false })} />}
+
+        <div className="home-center">
+          <HeatmapPanel />
+
           <p className="muted">
             Plus fortes variations de la séance du {formatDate(movers.data?.date)} (actions &gt; 1
             $, volume &gt; 200 k, hors splits).
@@ -58,15 +92,15 @@ export function MarketPage() {
           <Status loading={movers.loading} error={movers.error} />
           {movers.data && (
             <div className="grid-2">
-              <MoversTable title="Plus fortes hausses" movers={movers.data.gainers} />
-              <MoversTable title="Plus fortes baisses" movers={movers.data.losers} />
+              <MoversTable title="Top US" movers={movers.data.gainers} />
+              <MoversTable title="Flop US" movers={movers.data.losers} />
             </div>
           )}
         </div>
 
         {isLoaded && !isSignedIn && (
           <aside className="watchlist-panel">
-            <h2>Mes actions suivies</h2>
+            <h2>Mes actions</h2>
             <SignInPrompt />
           </aside>
         )}
@@ -77,8 +111,6 @@ export function MarketPage() {
           </>
         )}
       </div>
-
-      <NewsSection limit={5} />
     </>
   )
 }

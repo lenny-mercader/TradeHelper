@@ -45,6 +45,22 @@ export type Movers = {
   losers: Mover[]
 }
 
+export type HeatmapTile = {
+  symbol: string
+  name: string | null
+  close: number | null
+  close_local: number
+  currency: string
+  change_percent: number
+  volume: number
+  dollar_volume: number
+}
+
+export type Heatmap = {
+  date: string | null
+  tiles: HeatmapTile[]
+}
+
 export type CompareRow = {
   symbol: string
   name: string | null
@@ -125,6 +141,7 @@ export const api = {
   unfavorite: (symbol: string) =>
     request<Quote>(`/api/watchlist/${enc(symbol)}/favorite`, { method: 'DELETE' }),
   movers: () => request<Movers>('/api/market/movers'),
+  heatmap: (limit = 100) => request<Heatmap>(`/api/market/heatmap?limit=${limit}`),
   compare: (symbols: string[]) =>
     request<CompareRow[]>(`/api/compare?symbols=${enc(symbols.join(','))}`),
   performance: (symbols: string[], period: Period) =>

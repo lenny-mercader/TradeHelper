@@ -288,12 +288,6 @@ button.link:hover {
   margin: 0;
 }
 
-/* Grows to fill the extra height home-main gets stretched to (see .home-layout above),
-   so both movers panels reach down to the watchlist panel's bottom edge. */
-.home-main .grid-2 {
-  flex: 1;
-  min-height: 0;
-}
 
 .section-title {
   margin-top: 32px;
@@ -664,22 +658,25 @@ button.link:hover {
   margin: 0;
 }
 
-/* Homepage: market movers on the left, personal watchlist panel on the right.
-   No align-items override: grid's default "stretch" makes the shorter column (home-main)
-   as tall as the watchlist panel, and home-main's own flex column passes that extra height
-   down to grid-2 so the movers panels' bottom edge lines up with the panel's. */
-.home-layout {
+/* Homepage: news sidebar (collapsible) / heatmap + movers / personal watchlist panel.
+   Side columns track the viewport (vw) within bounds instead of a flat px width that always
+   claims the same space and starves the center as the window narrows. */
+.home-layout-v2 {
   display: grid;
-  /* The right column tracks the viewport (vw) within bounds, instead of a flat px width that
-     always claims the same space and starves the left columns as the window narrows. */
-  grid-template-columns: minmax(0, 1fr) clamp(240px, 22vw, 340px);
+  grid-template-columns: clamp(220px, 20vw, 280px) minmax(0, 1fr) clamp(240px, 22vw, 340px);
   gap: 16px;
+  align-items: start;
 }
 
-.home-main {
+.home-layout-v2.news-collapsed {
+  grid-template-columns: minmax(0, 1fr) clamp(240px, 22vw, 340px);
+}
+
+.home-center {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 16px;
 }
 
 .watchlist-panel {
@@ -865,11 +862,155 @@ button.link:hover {
 }
 
 @media (max-width: 767px) {
-  .home-layout {
-    grid-template-columns: minmax(0, 1fr);
+  /* Flex + order (not just a 1-column grid): lets "Mes actions" come first regardless of DOM
+     order, matching what people care about most on a phone. News is collapsed by default here
+     (see MarketPage); the order below still applies on the rare case it's expanded. */
+  .home-layout-v2 {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .home-layout-v2 > .watchlist-panel {
+    order: 1;
+  }
+
+  .home-layout-v2 > .home-center {
+    order: 2;
+  }
+
+  .home-layout-v2 > .news-sidebar {
+    order: 3;
   }
 
   .news-article {
     flex-basis: 160px;
   }
 }
+
+/* News sidebar (left column, collapsible — see .home-layout-v2.news-collapsed above) */
+.news-sidebar {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.news-sidebar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.news-sidebar-head h2 {
+  margin: 0;
+}
+
+.news-sidebar-feed + .news-sidebar-feed {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--grid);
+}
+
+.news-sidebar-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.news-sidebar-list li + li {
+  margin-top: 8px;
+}
+
+.news-sidebar-list a {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 8px;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.news-sidebar-list a:hover {
+  background: var(--hover);
+  text-decoration: none;
+}
+
+.news-sidebar-list img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.news-sidebar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.news-sidebar-title {
+  font-size: 0.8rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.news-sidebar-date {
+  font-size: 0.7rem;
+}
+
+/* Heatmap: a squarified treemap (see treemap.ts) — tile position/size come from inline styles
+   (percentages), so this stays correct at any container size without any JS re-measurement. */
+.heatmap-panel h2 {
+  margin-bottom: 10px;
+}
+
+.heatmap-grid {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2.2 / 1;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.heatmap-tile {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  padding: 2px;
+  color: #fff;
+  text-decoration: none;
+  /* Matches the panel's own background: a hairline visual gap between tiles without perturbing
+     the percentage-based layout math (the border sits inside the box, box-sizing: border-box). */
+  border: 1px solid var(--surface);
+}
+
+.heatmap-tile:hover {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.heatmap-symbol {
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.heatmap-change {
+  font-size: 0.68rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
