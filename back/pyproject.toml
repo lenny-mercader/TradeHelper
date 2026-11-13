@@ -14,6 +14,7 @@ dependencies = [
     "yfinance (>=1.8)",
     "clerk-backend-api (>=7.1)",
     "svix (>=2.9)",
+    "feedparser (>=6.0)",
 ]
 
 [tool.poetry]

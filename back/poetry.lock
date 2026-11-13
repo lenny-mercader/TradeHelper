@@ -604,6 +604,33 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.32)", "fa
 standard-no-fastapi-cloud-cli = ["email-validator (>=2.0.0)", "fastapi-cli[standard-no-fastapi-cloud-cli] (>=0.0.32)", "httpx (>=0.23.0,<1.0.0)", "httpx2 (>=2.0.0)", "jinja2 (>=3.1.5)", "opentelemetry-exporter-otlp-proto-http (>=1.44.0)", "opentelemetry-sdk (>=1.44.0)", "pydantic-extra-types (>=2.0.0)", "pydantic-settings (>=2.0.0)", "python-multipart (>=0.0.18)", "uvicorn[standard] (>=0.12.0)"]
 
 [[package]]
+name = "feedparser"
+version = "6.0.14"
+description = "Universal feed parser, handles RSS 0.9x, RSS 1.0, RSS 2.0, CDF, Atom 0.3, and Atom 1.0 feeds"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "feedparser-6.0.14-py3-none-any.whl", hash = "sha256:e35e3f760151b0c3b22cac9684155cae186a233e16c49bcbc6c49e91e3131137"},
+    {file = "feedparser-6.0.14.tar.gz", hash = "sha256:088679b0c4b543ee211a820dd544698c76a402122eae7473c04a43425f283d06"},
+]
+
+[package.dependencies]
+feedparser-sgmllib = ">=2,<3"
+
+[[package]]
+name = "feedparser-sgmllib"
+version = "2.1.0"
+description = "sgmllib from Python 2.7. For feedparser use only."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "feedparser_sgmllib-2.1.0-py3-none-any.whl", hash = "sha256:2cab2d43b95a954f920f18aebce7a4dbbb3f539780b127e2aa114f579821e01d"},
+    {file = "feedparser_sgmllib-2.1.0.tar.gz", hash = "sha256:61facf2918c4389b5b00714f76c5e03431ffcd94cd1f51d657edd6cd7c396579"},
+]
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -2585,4 +2612,4 @@ repair = ["scikit-learn (>=1.0)", "scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.15,<3.16"
-content-hash = "367401208b4e0919b244155f37cc0975d8bde57b9e23e1a59fdc93d6e47aa90d"
+content-hash = "009d002e5b3314c61e13a7194c03a4f534eedbd104be59fdfb9676803dd14dda"

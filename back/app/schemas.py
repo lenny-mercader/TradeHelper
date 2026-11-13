@@ -16,6 +16,8 @@ class Quote(BaseModel):
     change_percent: float | None
     volume: int | None
     followed: bool
+    # Always false when not followed (favoriting requires being in the watchlist).
+    favorite: bool = False
 
 
 class HistoryPoint(BaseModel):
@@ -80,3 +82,23 @@ class PerformanceOut(BaseModel):
     series: list[PerformanceSeries]
     # Symbols that could not be computed, with the reason (displayed as-is).
     errors: dict[str, str]
+
+
+class NewsArticle(BaseModel):
+    title: str
+    url: str
+    published_at: dt.datetime | None
+    # None when the feed gives no image for this article; the front falls back to the source logo.
+    image_url: str | None
+
+
+class NewsFeed(BaseModel):
+    id: str
+    name: str
+    site_url: str
+    # Small icon of the source (Google's favicon service), also the fallback for articles with
+    # no image.
+    logo_url: str
+    articles: list[NewsArticle]
+    # Set when this feed could not be fetched/parsed; `articles` is then empty (others still show).
+    error: str | None = None

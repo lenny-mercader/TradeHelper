@@ -45,6 +45,9 @@ class WatchlistItem(Base):
     added_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    # Capped at 5 per user (enforced in app code, see routers/watchlist.py).
+    favorite: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    favorited_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class DailyPrice(Base):

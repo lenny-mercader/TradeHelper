@@ -7,23 +7,27 @@ from app.services import fx
 from app.services.instruments import last_two
 
 
-def in_watchlist(session: Session, user_id: str | None, symbol: str) -> bool:
+def watchlist_flags(session: Session, user_id: str | None, symbol: str) -> tuple[bool, bool]:
+    """(followed, favorite) for this user and symbol. Always (False, False) when anonymous."""
     if user_id is None:
-        return False
-    return (
-        session.scalar(
-            select(WatchlistItem.symbol).where(
-                WatchlistItem.user_id == user_id, WatchlistItem.symbol == symbol
-            )
+        return False, False
+    row = session.execute(
+        select(WatchlistItem.favorite).where(
+            WatchlistItem.user_id == user_id, WatchlistItem.symbol == symbol
         )
-        is not None
-    )
+    ).first()
+    if row is None:
+        return False, False
+    return True, bool(row[0])
 
 
-def build_quote(session: Session, instrument: Instrument, followed: bool) -> Quote:
+def build_quote(
+    session: Session, instrument: Instrument, followed: bool, favorite: bool = False
+) -> Quote:
     """Latest close in EUR and its change vs the previous session (also in EUR).
 
     `followed`: whether the instrument is in the current user's watchlist (False when anonymous).
+    `favorite`: whether it is starred in that watchlist (always False when not followed).
     """
     rows = last_two(session, instrument.symbol)
     quote = Quote(
@@ -37,6 +41,7 @@ def build_quote(session: Session, instrument: Instrument, followed: bool) -> Quo
         change_percent=None,
         volume=None,
         followed=followed,
+        favorite=followed and favorite,
     )
     if not rows:
         return quote

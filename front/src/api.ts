@@ -11,6 +11,7 @@ export type Quote = {
   change_percent: number | null
   volume: number | null
   followed: boolean
+  favorite: boolean
 }
 
 export type HistoryPoint = {
@@ -77,6 +78,22 @@ export type Performance = {
   errors: Record<string, string>
 }
 
+export type NewsArticle = {
+  title: string
+  url: string
+  published_at: string | null
+  image_url: string | null
+}
+
+export type NewsFeed = {
+  id: string
+  name: string
+  site_url: string
+  logo_url: string
+  articles: NewsArticle[]
+  error: string | null
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init)
   if (!res.ok) {
@@ -103,9 +120,14 @@ export const api = {
   follow: (symbol: string) => request<Quote>(`/api/watchlist/${enc(symbol)}`, { method: 'POST' }),
   unfollow: (symbol: string) =>
     request<void>(`/api/watchlist/${enc(symbol)}`, { method: 'DELETE' }),
+  favorite: (symbol: string) =>
+    request<Quote>(`/api/watchlist/${enc(symbol)}/favorite`, { method: 'POST' }),
+  unfavorite: (symbol: string) =>
+    request<Quote>(`/api/watchlist/${enc(symbol)}/favorite`, { method: 'DELETE' }),
   movers: () => request<Movers>('/api/market/movers'),
   compare: (symbols: string[]) =>
     request<CompareRow[]>(`/api/compare?symbols=${enc(symbols.join(','))}`),
   performance: (symbols: string[], period: Period) =>
     request<Performance>(`/api/performance?symbols=${enc(symbols.join(','))}&period=${period}`),
+  news: (limit: number) => request<NewsFeed[]>(`/api/news?limit=${limit}`),
 }

@@ -30,3 +30,17 @@ export const formatDate = (iso: string | null | undefined) =>
 
 export const trendClass = (n: number | null | undefined) =>
   n == null || n === 0 ? '' : n > 0 ? 'up' : 'down'
+
+const relative = new Intl.RelativeTimeFormat('fr-FR', { numeric: 'auto' })
+const MINUTE = 60_000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+/** "il y a 12 min" / "il y a 3 h" for a recent timestamp, falling back to the date beyond a week. */
+export function formatRelativeDate(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime()
+  if (diff < 0 || diff > 7 * DAY) return formatDate(iso)
+  if (diff < HOUR) return relative.format(-Math.round(diff / MINUTE), 'minute')
+  if (diff < DAY) return relative.format(-Math.round(diff / HOUR), 'hour')
+  return relative.format(-Math.round(diff / DAY), 'day')
+}

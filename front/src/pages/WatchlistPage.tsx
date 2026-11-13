@@ -203,6 +203,9 @@ export function WatchlistPage() {
         <QuoteTable
           quotes={quotes}
           onRemove={(symbol) => run(`Retrait de ${symbol}…`, () => api.unfollow(symbol))}
+          onToggleFavorite={(symbol, favorite) =>
+            run('', () => (favorite ? api.favorite(symbol) : api.unfavorite(symbol)))
+          }
         />
       )}
       {quotes.length > 0 && viewState.view === 'chart' && (

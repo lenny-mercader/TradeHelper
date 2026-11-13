@@ -416,7 +416,9 @@ button.link:hover {
 
 @media (max-width: 480px) {
   .grid-2 {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), not 1fr: lets the column shrink below the table's nowrap min-content
+       width, so table-wrap's own horizontal scroll handles it instead of the whole page. */
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .topbar .search {
@@ -619,5 +621,220 @@ button.link:hover {
 @keyframes drawer-in {
   from {
     transform: translateX(100%);
+  }
+}
+
+/* table-wrap used inline inside a panel (no outer margin, panel already has its own) */
+.table-wrap.no-margin {
+  margin: 0;
+}
+
+/* Homepage: market movers on the left, personal watchlist panel on the right */
+.home-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.home-main {
+  min-width: 0;
+}
+
+.watchlist-panel {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.watchlist-panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.watchlist-panel-head h2 {
+  margin: 0;
+}
+
+.watchlist-panel-head .button {
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.mini-quote-list {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--grid);
+}
+
+.mini-quote-list:first-of-type {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.mini-quote-list h3 {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.mini-quote-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mini-quote-list li + li {
+  margin-top: 2px;
+}
+
+.mini-quote-list a {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 4px;
+  border-radius: 6px;
+  color: var(--text);
+}
+
+.mini-quote-list a:hover {
+  background: var(--hover);
+  text-decoration: none;
+}
+
+.mini-quote-list .symbol {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.mini-quote-list .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.mini-quote-list .up,
+.mini-quote-list .down {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Favorite star toggle (watchlist table) */
+.favorite-cell {
+  width: 1%;
+  padding-right: 0 !important;
+}
+
+.star-button {
+  padding: 2px 6px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+}
+
+.star-button[aria-pressed='true'] {
+  color: var(--series-4);
+}
+
+.star-button:hover:not(:disabled) {
+  color: var(--series-4);
+}
+
+/* News section: one full-width band per RSS source */
+.news-section {
+  margin-top: 24px;
+}
+
+.news-row {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.news-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.news-row-head img {
+  border-radius: 4px;
+}
+
+.news-row-head:hover {
+  text-decoration: none;
+  color: var(--accent);
+}
+
+.news-row-error {
+  margin: 0;
+}
+
+.news-row-articles {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.news-article {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.news-article:hover {
+  background: var(--hover);
+  text-decoration: none;
+}
+
+.news-article img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.news-article-title {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.news-article-date {
+  font-size: 0.75rem;
+}
+
+@media (max-width: 767px) {
+  .home-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .news-article {
+    flex-basis: 160px;
   }
 }

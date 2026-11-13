@@ -4,7 +4,7 @@ from app.auth import OptionalUser
 from app.routers.deps import SessionDep, SettingsDep, load_instrument
 from app.schemas import HistoryPoint, Quote
 from app.services import fx, instruments
-from app.services.quotes import build_quote, in_watchlist
+from app.services.quotes import build_quote, watchlist_flags
 
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
@@ -15,10 +15,11 @@ def get_instrument(
 ) -> Quote:
     """Loads the instrument's history on first access (Yahoo, Massive as fallback).
 
-    `followed` tells whether it is in the signed-in user's watchlist (always false when anonymous).
+    `followed`/`favorite` reflect the signed-in user's watchlist (always false when anonymous).
     """
     instrument = load_instrument(session, settings, symbol)
-    return build_quote(session, instrument, in_watchlist(session, user_id, instrument.symbol))
+    followed, favorite = watchlist_flags(session, user_id, instrument.symbol)
+    return build_quote(session, instrument, followed, favorite)
 
 
 @router.get("/{symbol}/history")
