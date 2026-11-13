@@ -58,6 +58,25 @@ export type CompareRow = {
   error: string | null
 }
 
+export type Period = '1M' | '6M' | '1Y' | '5Y'
+
+export type PerformanceSeries = {
+  symbol: string
+  name: string | null
+  currency: string | null
+  /** Change in % (EUR) since the period start, aligned on Performance.dates. */
+  values: (number | null)[]
+}
+
+export type Performance = {
+  period: Period
+  start: string | null
+  end: string | null
+  dates: string[]
+  series: PerformanceSeries[]
+  errors: Record<string, string>
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init)
   if (!res.ok) {
@@ -87,4 +106,6 @@ export const api = {
   movers: () => request<Movers>('/api/market/movers'),
   compare: (symbols: string[]) =>
     request<CompareRow[]>(`/api/compare?symbols=${enc(symbols.join(','))}`),
+  performance: (symbols: string[], period: Period) =>
+    request<Performance>(`/api/performance?symbols=${enc(symbols.join(','))}&period=${period}`),
 }

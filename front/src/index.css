@@ -11,6 +11,16 @@
   --hover: #eef2fb;
   --best: #e6f4ee;
 
+  /* Categorical chart palette (8 validated slots, fixed order; see chartColors.ts). */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-8: #e34948;
+
   font-family: system-ui, sans-serif;
   color-scheme: light dark;
 }
@@ -28,6 +38,15 @@
     --down: #ff6b74;
     --hover: #24304a;
     --best: #17352a;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
   }
 }
 
@@ -402,5 +421,203 @@ button.link:hover {
 
   .topbar .search {
     max-width: none;
+  }
+}
+
+/* Segmented control (List/Chart switch, period selector) */
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.segmented button {
+  padding: 6px 14px;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: 0;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--grid);
+}
+
+.segmented button[aria-pressed='true'] {
+  color: var(--accent-text);
+  background: var(--accent);
+}
+
+/* Watchlist chart: big plot on the left, checkable list on the right */
+.perf-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.perf-main {
+  min-width: 0;
+}
+
+.perf-chart .toolbar {
+  margin-top: 0;
+}
+
+.perf-chart-plot {
+  height: min(70vh, 720px);
+  min-height: 360px;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  padding: 12px 8px 4px 0;
+}
+
+.perf-side,
+.drawer {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+}
+
+.perf-side {
+  align-self: start;
+  max-height: min(80vh, 800px);
+  overflow-y: auto;
+}
+
+.selection-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--grid);
+}
+
+.selection-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.selection-list label {
+  display: grid;
+  grid-template-columns: auto 12px auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.selection-list li:hover {
+  background: var(--hover);
+}
+
+.selection-list li.disabled label {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.selection-list .symbol {
+  font-weight: 600;
+}
+
+.selection-list .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--grid);
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.chart-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 15%);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Phone: list moves into a panel opened with ☰ */
+.panel-toggle,
+.drawer-backdrop {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .perf-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .perf-side {
+    display: none;
+  }
+
+  .panel-toggle {
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+
+  .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgb(0 0 0 / 40%);
+  }
+
+  .drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    overflow-y: auto;
+    border-radius: 0;
+    animation: drawer-in 0.2s ease-out;
+  }
+
+  .drawer-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 1.1rem;
+  }
+
+  /* Keep the counter clear of the close button. */
+  .drawer .selection-head {
+    padding-right: 44px;
+  }
+
+  .perf-chart-plot {
+    height: 60vh;
+    min-height: 300px;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
   }
 }

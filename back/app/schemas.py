@@ -63,5 +63,20 @@ class CompareRow(BaseModel):
     error: str | None = None
 
 
-class JobResult(BaseModel):
-    results: dict[str, str]
+class PerformanceSeries(BaseModel):
+    symbol: str
+    name: str | None
+    currency: str | None
+    # Change in % (EUR) since the period start, aligned on PerformanceOut.dates.
+    # None before the instrument's first known day.
+    values: list[float | None]
+
+
+class PerformanceOut(BaseModel):
+    period: str
+    start: dt.date | None
+    end: dt.date | None
+    dates: list[dt.date]
+    series: list[PerformanceSeries]
+    # Symbols that could not be computed, with the reason (displayed as-is).
+    errors: dict[str, str]
