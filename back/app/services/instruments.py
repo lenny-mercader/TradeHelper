@@ -68,6 +68,7 @@ def ensure_loaded(session: Session, settings: Settings, symbol: str) -> Instrume
     today = dt.date.today()
 
     if instrument and instrument.history_loaded_at and instrument.history_checked_on == today:
+        _ensure_profile(session, instrument)
         return instrument
 
     full_start = today - dt.timedelta(days=365 * settings.history_years)
@@ -108,18 +109,21 @@ def ensure_loaded(session: Session, settings: Settings, symbol: str) -> Instrume
     save_bars(session, bars)
     session.commit()
     fx.ensure_currency(session, instrument.currency)
-
-    if instrument.profile_loaded_at is None:
-        # Best-effort, once per instrument: a failure here never blocks showing the price.
-        # It just retries on the next view, since profile_loaded_at stays unset.
-        try:
-            instrument.profile = yahoo.fetch_profile(symbol)
-            instrument.profile_loaded_at = dt.datetime.now(dt.UTC)
-            session.commit()
-        except ProviderError:
-            session.rollback()
-
+    _ensure_profile(session, instrument)
     return instrument
+
+
+def _ensure_profile(session: Session, instrument: Instrument) -> None:
+    """Best-effort, once per instrument: a failure never blocks showing the price, and it just
+    retries on a later view since `profile_loaded_at` stays unset."""
+    if instrument.profile_loaded_at is not None:
+        return
+    try:
+        instrument.profile = yahoo.fetch_profile(instrument.symbol)
+        instrument.profile_loaded_at = dt.datetime.now(dt.UTC)
+        session.commit()
+    except ProviderError:
+        session.rollback()
 
 
 def history(session: Session, symbol: str) -> list[DailyPrice]:
