@@ -101,6 +101,7 @@ class MassiveClient:
                 low=to_decimal(r["l"]),
                 close=to_decimal(r["c"]),
                 volume=round(r.get("v") or 0),
+                transactions=round(r.get("n") or 0),
             )
             for r in data.get("results") or []
             if all(k in r for k in ("T", "o", "h", "l", "c"))
@@ -124,6 +125,7 @@ class MassiveClient:
                 low=to_decimal(r["l"]),
                 close=to_decimal(r["c"]),
                 volume=round(r.get("v") or 0),
+                transactions=round(r.get("n") or 0),
             )
             for r in results
         ]

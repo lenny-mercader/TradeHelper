@@ -120,3 +120,49 @@ class NewsFeed(BaseModel):
     articles: list[NewsArticle]
     # Set when this feed could not be fetched/parsed; `articles` is then empty (others still show).
     error: str | None = None
+
+
+class Vix(BaseModel):
+    value: float
+    label: str
+
+
+class InstrumentProfile(BaseModel):
+    """Everything for the stock page's tabs beyond the quote itself. All fields optional: not
+    every instrument has every field (ETFs have no sector; some tickers lack analyst coverage)."""
+
+    is_us: bool
+
+    # Profile
+    sector: str | None = None
+    industry: str | None = None
+    summary: str | None = None
+    country: str | None = None
+    website: str | None = None
+    employees: int | None = None
+
+    # Valorisation & rentabilité
+    market_cap: float | None = None
+    trailing_pe: float | None = None
+    forward_pe: float | None = None
+    enterprise_value: float | None = None
+    price_to_book: float | None = None
+    profit_margin: float | None = None
+    return_on_equity: float | None = None
+    debt_to_equity: float | None = None
+    eps: float | None = None
+
+    # Analystes
+    recommendation: str | None = None
+    target_mean_price: float | None = None
+    analyst_count: int | None = None
+
+    # Dividende & range 52 semaines
+    dividend_yield: float | None = None
+    week52_high: float | None = None
+    week52_low: float | None = None
+    average_volume: int | None = None
+
+    # Marché
+    transactions_today: int | None = None  # US only (Massive); null otherwise
+    vix: Vix | None = None

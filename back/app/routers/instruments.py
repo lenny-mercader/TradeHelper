@@ -2,8 +2,8 @@ from fastapi import APIRouter
 
 from app.auth import OptionalUser
 from app.routers.deps import SessionDep, SettingsDep, load_instrument
-from app.schemas import HistoryPoint, Quote
-from app.services import fx, instruments
+from app.schemas import HistoryPoint, InstrumentProfile, Quote
+from app.services import fx, instruments, market, vix as vix_service
 from app.services.quotes import build_quote, watchlist_flags
 
 router = APIRouter(prefix="/instruments", tags=["instruments"])
@@ -36,3 +36,12 @@ def get_history(symbol: str, session: SessionDep, settings: SettingsDep) -> list
         )
         for r in rows
     ]
+
+
+@router.get("/{symbol}/profile")
+def get_profile(symbol: str, session: SessionDep, settings: SettingsDep) -> InstrumentProfile:
+    """Sector, description, valuation, analyst views... (Yahoo, loaded once) plus today's US
+    transaction count (Massive) and the VIX. Public: none of this is personal."""
+    instrument = load_instrument(session, settings, symbol)
+    transactions = market.transactions_today(session, instrument.symbol) if instrument.is_us else None
+    return instruments.build_profile(instrument, transactions, vix_service.get_vix())

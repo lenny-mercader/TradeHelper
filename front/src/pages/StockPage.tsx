@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api } from '../api'
 import { PriceChart } from '../components/PriceChart'
+import { ProfileTabs } from '../components/ProfileTabs'
 import { Status } from '../components/Status'
 import { formatDate, formatEur, formatLocal, formatPercent, formatVolume, trendClass } from '../format'
 import { useApi } from '../hooks/useApi'
@@ -91,6 +92,8 @@ export function StockPage() {
 
           <Status loading={history.loading} error={history.error} />
           {history.data && <PriceChart history={history.data} />}
+
+          <ProfileTabs symbol={q.symbol} currency={q.currency} />
         </>
       )}
     </>

@@ -44,7 +44,10 @@ def _store_snapshot(session: Session, bars: list[Bar]) -> None:
             index_elements=["symbol"],
             set_={
                 "prev_close": case((newer, UsSnapshot.close), else_=UsSnapshot.prev_close),
-                **{c: stmt.excluded[c] for c in ("date", "open", "high", "low", "close", "volume")},
+                **{
+                    c: stmt.excluded[c]
+                    for c in ("date", "open", "high", "low", "close", "volume", "transactions")
+                },
             },
         )
         session.execute(stmt)
@@ -177,3 +180,8 @@ def snapshot_date(session: Session) -> dt.date | None:
 
 def last_stored(session: Session, symbol: str) -> dt.date | None:
     return session.scalar(select(func.max(DailyPrice.date)).where(DailyPrice.symbol == symbol))
+
+
+def transactions_today(session: Session, symbol: str) -> int | None:
+    """Trades on the latest US session (Massive only; None for non-US or not-yet-synced)."""
+    return session.scalar(select(UsSnapshot.transactions).where(UsSnapshot.symbol == symbol))

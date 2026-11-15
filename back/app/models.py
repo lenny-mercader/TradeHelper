@@ -1,7 +1,9 @@
 import datetime as dt
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import BigInteger, Boolean, Date, DateTime, ForeignKey, Numeric, String, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 PRICE = Numeric(18, 6)
@@ -31,6 +33,10 @@ class Instrument(Base):
     # Last day an update was attempted (at most one provider call per day per symbol).
     # Non-null means the instrument has been opened at least once: the nightly job keeps it fresh.
     history_checked_on: Mapped[dt.date | None] = mapped_column(Date)
+    # Curated Yahoo fields for the stock page's profile tabs (see providers/yahoo.PROFILE_FIELDS).
+    # Loaded once and never auto-refreshed (fundamentals change slowly; see services/instruments).
+    profile: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    profile_loaded_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class WatchlistItem(Base):
@@ -82,6 +88,8 @@ class UsSnapshot(Base):
     prev_close: Mapped[Decimal | None] = mapped_column(PRICE)
     # Split executed since the previous session: close vs prev_close is meaningless.
     split: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    # Trades that day (Massive's `n`), shown on the stock page; US only, null elsewhere.
+    transactions: Mapped[int | None] = mapped_column(BigInteger)
 
 
 class FxRate(Base):

@@ -76,6 +76,7 @@ def fetch_history(symbol: str, start: dt.date) -> History:
                 low=low,
                 close=c,
                 volume=0 if volume is None or math.isnan(volume) else int(volume),
+                transactions=0,
             )
         )
     if not bars:
@@ -103,6 +104,47 @@ def search(query: str, limit: int = 10) -> list[dict[str, str | None]]:
         for q in quotes
         if q.get("symbol") and q.get("quoteType") in SEARCH_TYPES
     ]
+
+
+# Yahoo fields kept for the stock page's "profile" tabs (curated subset of a much larger dict;
+# not every field exists for every instrument, e.g. ETFs have no sector/employees).
+PROFILE_FIELDS = (
+    "sector",
+    "industry",
+    "longBusinessSummary",
+    "country",
+    "website",
+    "fullTimeEmployees",
+    "marketCap",
+    "trailingPE",
+    "forwardPE",
+    "enterpriseValue",
+    "priceToBook",
+    "profitMargins",
+    "returnOnEquity",
+    "debtToEquity",
+    "trailingEps",
+    "dividendYield",
+    "fiftyTwoWeekHigh",
+    "fiftyTwoWeekLow",
+    "averageVolume",
+    "recommendationKey",
+    "targetMeanPrice",
+    "numberOfAnalystOpinions",
+)
+
+
+def fetch_profile(symbol: str) -> dict[str, Any]:
+    """Company profile/fundamentals, a heavier call than history: fetched once per instrument."""
+    info = _call(yf.Ticker(symbol).get_info)
+    return {k: info[k] for k in PROFILE_FIELDS if info.get(k) is not None}
+
+
+def fetch_vix() -> float | None:
+    """Latest CBOE Volatility Index close (market-wide, not per-symbol; cached by the caller)."""
+    df = _call(yf.Ticker("^VIX").history, period="5d", raise_errors=True)
+    closes = df["Close"].dropna()
+    return float(closes.iloc[-1]) if len(closes) else None
 
 
 def fx_history(currency: str, start: dt.date) -> list[tuple[dt.date, float]]:

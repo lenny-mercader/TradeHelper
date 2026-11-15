@@ -1022,3 +1022,44 @@ button.link:hover {
   font-variant-numeric: tabular-nums;
 }
 
+
+/* Stock page: extra info tabs (Profil, Valorisation, Analystes, Dividende, Marché) */
+.profile-tabs {
+  margin-top: 16px;
+}
+
+.profile-tabs .segmented {
+  margin-bottom: 16px;
+}
+
+.profile-tabs .segmented button[role='tab'] {
+  color: var(--muted);
+}
+
+.profile-summary {
+  margin: 0 0 16px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-field strong {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+
+.profile-footnote {
+  margin: 16px 0 0;
+  font-size: 0.78rem;
+}

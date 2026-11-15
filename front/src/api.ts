@@ -110,6 +110,39 @@ export type NewsFeed = {
   error: string | null
 }
 
+export type Vix = {
+  value: number
+  label: string
+}
+
+export type InstrumentProfile = {
+  is_us: boolean
+  sector: string | null
+  industry: string | null
+  summary: string | null
+  country: string | null
+  website: string | null
+  employees: number | null
+  market_cap: number | null
+  trailing_pe: number | null
+  forward_pe: number | null
+  enterprise_value: number | null
+  price_to_book: number | null
+  profit_margin: number | null
+  return_on_equity: number | null
+  debt_to_equity: number | null
+  eps: number | null
+  recommendation: string | null
+  target_mean_price: number | null
+  analyst_count: number | null
+  dividend_yield: number | null
+  week52_high: number | null
+  week52_low: number | null
+  average_volume: number | null
+  transactions_today: number | null
+  vix: Vix | null
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init)
   if (!res.ok) {
@@ -132,6 +165,8 @@ export const api = {
     request<SearchResult[]>(`/api/search?q=${enc(q)}`, { signal }),
   instrument: (symbol: string) => request<Quote>(`/api/instruments/${enc(symbol)}`),
   history: (symbol: string) => request<HistoryPoint[]>(`/api/instruments/${enc(symbol)}/history`),
+  profile: (symbol: string) =>
+    request<InstrumentProfile>(`/api/instruments/${enc(symbol)}/profile`),
   watchlist: () => request<Quote[]>('/api/watchlist'),
   follow: (symbol: string) => request<Quote>(`/api/watchlist/${enc(symbol)}`, { method: 'POST' }),
   unfollow: (symbol: string) =>

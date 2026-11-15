@@ -11,6 +11,7 @@ from app.models import DailyPrice, Instrument
 from app.providers import yahoo
 from app.providers.common import Bar, NotFoundError, ProviderError
 from app.providers.massive import MassiveClient
+from app.schemas import InstrumentProfile, Vix
 from app.services import fx
 from app.services.upsert import PRICE_COLUMNS, upsert
 
@@ -32,7 +33,9 @@ def normalize_symbol(symbol: str) -> str:
 
 
 def save_bars(session: Session, bars: list[Bar]) -> None:
-    upsert(session, DailyPrice, bars, ("symbol", "date"), PRICE_COLUMNS)
+    # `transactions` (Massive only) has nowhere to go on DailyPrice; UsSnapshot.save keeps it.
+    rows = [{k: v for k, v in bar.items() if k != "transactions"} for bar in bars]
+    upsert(session, DailyPrice, rows, ("symbol", "date"), PRICE_COLUMNS)
 
 
 def _fetch(
@@ -105,6 +108,17 @@ def ensure_loaded(session: Session, settings: Settings, symbol: str) -> Instrume
     save_bars(session, bars)
     session.commit()
     fx.ensure_currency(session, instrument.currency)
+
+    if instrument.profile_loaded_at is None:
+        # Best-effort, once per instrument: a failure here never blocks showing the price.
+        # It just retries on the next view, since profile_loaded_at stays unset.
+        try:
+            instrument.profile = yahoo.fetch_profile(symbol)
+            instrument.profile_loaded_at = dt.datetime.now(dt.UTC)
+            session.commit()
+        except ProviderError:
+            session.rollback()
+
     return instrument
 
 
@@ -127,4 +141,38 @@ def last_two(session: Session, symbol: str) -> list[DailyPrice]:
     )
 
 
-__all__ = ["InvalidSymbolError", "NotFoundError", "ProviderError", "ensure_loaded"]
+def build_profile(
+    instrument: Instrument, transactions: int | None, vix: dict[str, float | str] | None
+) -> InstrumentProfile:
+    """Maps the curated Yahoo dict (camelCase field names) + market data to the API shape."""
+    p = instrument.profile or {}
+    return InstrumentProfile(
+        is_us=instrument.is_us,
+        sector=p.get("sector"),
+        industry=p.get("industry"),
+        summary=p.get("longBusinessSummary"),
+        country=p.get("country"),
+        website=p.get("website"),
+        employees=p.get("fullTimeEmployees"),
+        market_cap=p.get("marketCap"),
+        trailing_pe=p.get("trailingPE"),
+        forward_pe=p.get("forwardPE"),
+        enterprise_value=p.get("enterpriseValue"),
+        price_to_book=p.get("priceToBook"),
+        profit_margin=p.get("profitMargins"),
+        return_on_equity=p.get("returnOnEquity"),
+        debt_to_equity=p.get("debtToEquity"),
+        eps=p.get("trailingEps"),
+        recommendation=p.get("recommendationKey"),
+        target_mean_price=p.get("targetMeanPrice"),
+        analyst_count=p.get("numberOfAnalystOpinions"),
+        dividend_yield=p.get("dividendYield"),
+        week52_high=p.get("fiftyTwoWeekHigh"),
+        week52_low=p.get("fiftyTwoWeekLow"),
+        average_volume=p.get("averageVolume"),
+        transactions_today=transactions,
+        vix=Vix(**vix) if vix else None,
+    )
+
+
+__all__ = ["InvalidSymbolError", "NotFoundError", "ProviderError", "build_profile", "ensure_loaded"]

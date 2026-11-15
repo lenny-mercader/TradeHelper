@@ -23,7 +23,26 @@ export const formatPercent = (n: number | null | undefined) =>
 export const formatRatio = (n: number | null | undefined) =>
   n == null ? DASH : `${number.format(n)} %`
 
+/** For fields Yahoo gives as a fraction (0.276 = 27.6 %): profit margin, ROE. */
+export const formatFractionPercent = (n: number | null | undefined) =>
+  n == null ? DASH : `${number.format(n * 100)} %`
+
 export const formatVolume = (n: number | null | undefined) => (n == null ? DASH : compact.format(n))
+
+export function formatCompactLocal(n: number | null | undefined, currency: string | null | undefined) {
+  if (n == null) return DASH
+  if (!currency) return compact.format(n)
+  try {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency,
+      notation: 'compact',
+      maximumFractionDigits: 2,
+    }).format(n)
+  } catch {
+    return `${compact.format(n)} ${currency}`
+  }
+}
 
 export const formatDate = (iso: string | null | undefined) =>
   iso ? date.format(new Date(iso)) : DASH

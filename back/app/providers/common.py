@@ -19,6 +19,8 @@ class Bar(TypedDict):
     low: Decimal
     close: Decimal
     volume: int
+    # Number of trades that day (Massive only; 0 from sources that don't report it, e.g. Yahoo).
+    transactions: int
 
 
 def to_decimal(value: float | int | str) -> Decimal:
