@@ -122,8 +122,13 @@ def _ensure_profile(session: Session, instrument: Instrument) -> None:
         instrument.profile = yahoo.fetch_profile(instrument.symbol)
         instrument.profile_loaded_at = dt.datetime.now(dt.UTC)
         session.commit()
-    except ProviderError:
+    except Exception as exc:
         session.rollback()
+        # TEMPORARY diagnostic (Yahoo's profile call behaves differently in prod than locally):
+        # surfaces the failure type via the API instead of silently leaving profile empty.
+        # Remove once the cause is confirmed.
+        instrument.profile = {"_debug_error": f"{type(exc).__name__}: {exc}"[:300]}
+        session.commit()
 
 
 def history(session: Session, symbol: str) -> list[DailyPrice]:
@@ -150,6 +155,8 @@ def build_profile(
 ) -> InstrumentProfile:
     """Maps the curated Yahoo dict (camelCase field names) + market data to the API shape."""
     p = instrument.profile or {}
+    if "_debug_error" in p:  # TEMPORARY, see _ensure_profile
+        return InstrumentProfile(is_us=instrument.is_us, summary=f"DEBUG: {p['_debug_error']}")
     return InstrumentProfile(
         is_us=instrument.is_us,
         sector=p.get("sector"),
