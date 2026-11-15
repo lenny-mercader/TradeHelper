@@ -114,22 +114,18 @@ def ensure_loaded(session: Session, settings: Settings, symbol: str) -> Instrume
 
 
 def _ensure_profile(session: Session, instrument: Instrument) -> None:
-    """Best-effort, once per instrument: a failure never blocks showing the price, and it just
-    retries on a later view. Checks `profile` itself (not just `profile_loaded_at`): a symbol
-    that only ever got an empty/error result keeps retrying instead of staying stuck on it."""
-    if instrument.profile and "_debug_error" not in instrument.profile:
+    """Best-effort, once per instrument: a failure never blocks showing the price. Checks
+    `profile` itself (not just `profile_loaded_at`): a symbol that only ever got an empty
+    result (Yahoo can return a thin dict with no exception) keeps retrying on a later view
+    instead of staying stuck on it forever."""
+    if instrument.profile:
         return
     try:
         instrument.profile = yahoo.fetch_profile(instrument.symbol)
         instrument.profile_loaded_at = dt.datetime.now(dt.UTC)
         session.commit()
-    except Exception as exc:
+    except ProviderError:
         session.rollback()
-        # TEMPORARY diagnostic (Yahoo's profile call behaves differently in prod than locally):
-        # surfaces the failure type via the API instead of silently leaving profile empty.
-        # Remove once the cause is confirmed.
-        instrument.profile = {"_debug_error": f"{type(exc).__name__}: {exc}"[:300]}
-        session.commit()
 
 
 def history(session: Session, symbol: str) -> list[DailyPrice]:
@@ -156,8 +152,6 @@ def build_profile(
 ) -> InstrumentProfile:
     """Maps the curated Yahoo dict (camelCase field names) + market data to the API shape."""
     p = instrument.profile or {}
-    if "_debug_error" in p:  # TEMPORARY, see _ensure_profile
-        return InstrumentProfile(is_us=instrument.is_us, summary=f"DEBUG: {p['_debug_error']}")
     return InstrumentProfile(
         is_us=instrument.is_us,
         sector=p.get("sector"),

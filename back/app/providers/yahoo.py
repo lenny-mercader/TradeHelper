@@ -139,10 +139,10 @@ def fetch_profile(symbol: str) -> dict[str, Any]:
     info = _call(yf.Ticker(symbol).get_info)
     curated = {k: info[k] for k in PROFILE_FIELDS if info.get(k) is not None}
     if not curated:
-        # get_info() can return a thin/degraded dict (no exception) instead of raising, e.g. for
-        # a datacenter IP; treat that as a failure too, so it's retried later instead of being
-        # cached as permanently empty.
-        raise ProviderError(f"empty profile ({len(info)} raw keys): {sorted(info)[:10]}"[:300])
+        # get_info() can return a thin/degraded dict with no exception (seen from Render's IP
+        # even though history() works fine there); treat that as a failure too, so it gets
+        # retried on a later view instead of being cached as permanently empty.
+        raise ProviderError("Yahoo: empty profile")
     return curated
 
 
