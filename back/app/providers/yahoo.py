@@ -137,7 +137,13 @@ PROFILE_FIELDS = (
 def fetch_profile(symbol: str) -> dict[str, Any]:
     """Company profile/fundamentals, a heavier call than history: fetched once per instrument."""
     info = _call(yf.Ticker(symbol).get_info)
-    return {k: info[k] for k in PROFILE_FIELDS if info.get(k) is not None}
+    curated = {k: info[k] for k in PROFILE_FIELDS if info.get(k) is not None}
+    if not curated:
+        # get_info() can return a thin/degraded dict (no exception) instead of raising, e.g. for
+        # a datacenter IP; treat that as a failure too, so it's retried later instead of being
+        # cached as permanently empty.
+        raise ProviderError(f"empty profile ({len(info)} raw keys): {sorted(info)[:10]}"[:300])
+    return curated
 
 
 def fetch_vix() -> float | None:

@@ -115,8 +115,9 @@ def ensure_loaded(session: Session, settings: Settings, symbol: str) -> Instrume
 
 def _ensure_profile(session: Session, instrument: Instrument) -> None:
     """Best-effort, once per instrument: a failure never blocks showing the price, and it just
-    retries on a later view since `profile_loaded_at` stays unset."""
-    if instrument.profile_loaded_at is not None:
+    retries on a later view. Checks `profile` itself (not just `profile_loaded_at`): a symbol
+    that only ever got an empty/error result keeps retrying instead of staying stuck on it."""
+    if instrument.profile and "_debug_error" not in instrument.profile:
         return
     try:
         instrument.profile = yahoo.fetch_profile(instrument.symbol)
