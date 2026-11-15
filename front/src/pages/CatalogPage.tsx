@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { api, type CatalogSort } from '../api'
 import { Status } from '../components/Status'
-import { EUROPE } from '../countryGroups'
+import { CONTINENTS } from '../countryGroups'
 import { formatCompactLocal, formatEur, formatPercent, trendClass } from '../format'
 import { useApi } from '../hooks/useApi'
 
@@ -66,12 +66,32 @@ export function CatalogPage() {
   const key = `catalog:${q}:${countries.join(',')}:${sector}:${sort}:${order}:${page}`
   const result = useApi(key, () => api.catalog({ q, countries, sector, sort, order, page }))
 
-  const europeChecked = useMemo(
-    () =>
-      facets.data?.countries.filter((c) => EUROPE.has(c)).every((c) => countries.includes(c)) &&
-      facets.data?.countries.some((c) => EUROPE.has(c)),
-    [facets.data, countries],
+  // Each continent only lists the countries actually present in the data; continents with none
+  // of their countries present are skipped entirely.
+  const continents = useMemo(() => {
+    const present = new Set(facets.data?.countries ?? [])
+    return CONTINENTS.map((c) => ({ ...c, countries: c.countries.filter((n) => present.has(n)) })).filter(
+      (c) => c.countries.length > 0,
+    )
+  }, [facets.data])
+  const groupedCountries = useMemo(() => new Set(continents.flatMap((c) => c.countries)), [continents])
+  const ungroupedCountries = useMemo(
+    () => (facets.data?.countries ?? []).filter((c) => !groupedCountries.has(c)),
+    [facets.data, groupedCountries],
   )
+
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  function toggleExpanded(name: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(name)) {
+        next.delete(name)
+      } else {
+        next.add(name)
+      }
+      return next
+    })
+  }
 
   function toggleCountry(country: string) {
     update({
@@ -81,12 +101,12 @@ export function CatalogPage() {
     })
   }
 
-  function toggleEurope() {
-    const europeCountries = facets.data?.countries.filter((c) => EUROPE.has(c)) ?? []
+  function toggleContinent(continentCountries: string[]) {
+    const allChecked = continentCountries.every((c) => countries.includes(c))
     update({
-      countries: europeChecked
-        ? countries.filter((c) => !EUROPE.has(c))
-        : [...new Set([...countries, ...europeCountries])],
+      countries: allChecked
+        ? countries.filter((c) => !continentCountries.includes(c))
+        : [...new Set([...countries, ...continentCountries])],
     })
   }
 
@@ -113,15 +133,50 @@ export function CatalogPage() {
 
           <h3>Pays</h3>
           <ul className="catalog-country-list">
-            {facets.data?.countries.some((c) => EUROPE.has(c)) && (
-              <li>
-                <label>
-                  <input type="checkbox" checked={!!europeChecked} onChange={toggleEurope} />
-                  Europe
-                </label>
-              </li>
-            )}
-            {facets.data?.countries.map((c) => (
+            {continents.map((cont) => {
+              const allChecked = cont.countries.every((c) => countries.includes(c))
+              const isExpanded = expanded.has(cont.name)
+              return (
+                <li key={cont.name} className="catalog-continent">
+                  <div className="catalog-continent-row">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={() => toggleContinent(cont.countries)}
+                      />
+                      {cont.name}
+                    </label>
+                    <button
+                      type="button"
+                      className="catalog-continent-toggle"
+                      aria-label={isExpanded ? `Replier ${cont.name}` : `Déplier ${cont.name}`}
+                      aria-expanded={isExpanded}
+                      onClick={() => toggleExpanded(cont.name)}
+                    >
+                      {isExpanded ? '▾' : '▸'}
+                    </button>
+                  </div>
+                  {isExpanded && (
+                    <ul className="catalog-continent-countries">
+                      {cont.countries.map((c) => (
+                        <li key={c}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={countries.includes(c)}
+                              onChange={() => toggleCountry(c)}
+                            />
+                            {c}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              )
+            })}
+            {ungroupedCountries.map((c) => (
               <li key={c}>
                 <label>
                   <input
