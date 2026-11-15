@@ -143,6 +143,40 @@ export type InstrumentProfile = {
   vix: Vix | null
 }
 
+export type CatalogRow = {
+  symbol: string
+  name: string | null
+  country: string | null
+  sector: string | null
+  currency: string | null
+  close: number | null
+  change_percent: number | null
+  market_cap: number | null
+}
+
+export type CatalogPage = {
+  rows: CatalogRow[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export type CatalogFacets = {
+  countries: string[]
+  sectors: string[]
+}
+
+export type CatalogSort = 'change' | 'market_cap' | 'name'
+
+export type CatalogFilters = {
+  q?: string
+  countries?: string[]
+  sector?: string
+  sort: CatalogSort
+  order: 'asc' | 'desc'
+  page: number
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init)
   if (!res.ok) {
@@ -182,4 +216,15 @@ export const api = {
   performance: (symbols: string[], period: Period) =>
     request<Performance>(`/api/performance?symbols=${enc(symbols.join(','))}&period=${period}`),
   news: (limit: number) => request<NewsFeed[]>(`/api/news?limit=${limit}`),
+  catalogFacets: () => request<CatalogFacets>('/api/catalog/facets'),
+  catalog: (filters: CatalogFilters) => {
+    const params = new URLSearchParams()
+    if (filters.q) params.set('q', filters.q)
+    for (const c of filters.countries ?? []) params.append('country', c)
+    if (filters.sector) params.set('sector', filters.sector)
+    params.set('sort', filters.sort)
+    params.set('order', filters.order)
+    params.set('page', String(filters.page))
+    return request<CatalogPage>(`/api/catalog?${params.toString()}`)
+  },
 }

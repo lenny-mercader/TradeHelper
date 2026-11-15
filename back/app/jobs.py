@@ -1,9 +1,10 @@
 """Scheduled jobs, run by GitHub Actions (or locally) with a direct database connection.
 
-    python -m app.jobs daily     # US snapshot, opened instruments, FX rates
-    python -m app.jobs catalog   # US instrument catalog (~13 Massive calls, ~2-3 minutes)
+    python -m app.jobs daily      # US snapshot, opened instruments, FX rates
+    python -m app.jobs catalog    # US instrument catalog (~13 Massive calls, ~2-3 minutes)
+    python -m app.jobs profiles   # backfill market cap/sector, 400 symbols at a time (Yahoo)
 
-Needs DATABASE_URL and MASSIVE_API_KEY. Exits with status 1 if any step failed.
+Needs DATABASE_URL (+ MASSIVE_API_KEY for `catalog`). Exits with status 1 if any step failed.
 """
 
 import argparse
@@ -12,9 +13,10 @@ import sys
 
 from app.config import get_settings
 from app.db import get_session
+from app.services.profile_backfill import backfill as profiles_backfill
 from app.services.refresh import catalog_refresh, daily_refresh
 
-JOBS = {"daily": daily_refresh, "catalog": catalog_refresh}
+JOBS = {"daily": daily_refresh, "catalog": catalog_refresh, "profiles": profiles_backfill}
 
 
 def main() -> int:

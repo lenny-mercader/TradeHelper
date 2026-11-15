@@ -6,6 +6,7 @@ from alembic.config import Config
 from fastapi import FastAPI
 
 from app.routers import (
+    catalog,
     compare,
     instruments,
     market,
@@ -34,5 +35,15 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="TradeHelper API", lifespan=lifespan)
 
-for module in (search, instruments, watchlist, market, compare, performance, news, webhooks):
+for module in (
+    search,
+    instruments,
+    watchlist,
+    market,
+    compare,
+    performance,
+    news,
+    catalog,
+    webhooks,
+):
     app.include_router(module.router, prefix="/api")

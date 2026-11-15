@@ -1,6 +1,7 @@
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
 import { Link, NavLink, Route, Routes, useNavigate } from 'react-router'
 import { SearchBox } from './components/SearchBox'
+import { CatalogPage } from './pages/CatalogPage'
 import { ComparePage } from './pages/ComparePage'
 import { MarketPage } from './pages/MarketPage'
 import { NewsPage } from './pages/NewsPage'
@@ -22,6 +23,7 @@ function App() {
           </NavLink>
           <NavLink to="/watchlist">Suivies</NavLink>
           <NavLink to="/compare">Comparer</NavLink>
+          <NavLink to="/catalog">Catalogue</NavLink>
           <NavLink to="/news">Actualité</NavLink>
         </nav>
         <SearchBox onSelect={(r) => navigate(`/stock/${encodeURIComponent(r.symbol)}`)} />
@@ -48,6 +50,7 @@ function App() {
           <Route path="/watchlist" element={<WatchlistPage />} />
           <Route path="/stock/:symbol" element={<StockPage />} />
           <Route path="/compare" element={<ComparePage />} />
+          <Route path="/catalog" element={<CatalogPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route
             path="*"

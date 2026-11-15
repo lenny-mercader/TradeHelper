@@ -1,0 +1,33 @@
+name: Catalog profile backfill
+
+on:
+  schedule:
+    # Every 3 hours: ~400 symbols/run, gently paced (Yahoo has no published quota — a single
+    # burst over the whole ~11k US catalog risks degrading Yahoo access for the entire app).
+    - cron: "15 */3 * * *"
+  workflow_dispatch:
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    container: python:3.15-slim
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: back
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+      POETRY_NO_INTERACTION: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pip install --no-cache-dir --root-user-action=ignore poetry
+          poetry install --no-root
+
+      - name: Backfill market cap/sector (400 symbols)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
+        run: python -m app.jobs profiles

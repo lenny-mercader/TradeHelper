@@ -122,6 +122,30 @@ class NewsFeed(BaseModel):
     error: str | None = None
 
 
+class CatalogRow(BaseModel):
+    symbol: str
+    name: str | None
+    country: str | None
+    sector: str | None
+    currency: str | None
+    close: float | None  # EUR
+    change_percent: float | None
+    # EUR, like `close` — "—" until the instrument's profile is loaded.
+    market_cap: float | None
+
+
+class CatalogPage(BaseModel):
+    rows: list[CatalogRow]
+    total: int
+    page: int
+    page_size: int
+
+
+class CatalogFacets(BaseModel):
+    countries: list[str]
+    sectors: list[str]
+
+
 class Vix(BaseModel):
     value: float
     label: str
